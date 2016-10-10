@@ -41,6 +41,7 @@ public class TwitchBot extends PircBotX {
 	private Logger logger;
 	
 	private Scheduler scheduler;
+	private Thread gsThread;
 	
 	public TwitchBot(String username, String authcode, String... defaultChannels){	
 		this(getConfig(username, authcode, defaultChannels));
@@ -162,7 +163,7 @@ public class TwitchBot extends PircBotX {
 	@Override
 	public void startBot() throws IOException, IrcException {
 		groupServer.setup(getConfiguration().getName(), getConfiguration().getServerPassword(), "#"+getConfiguration().getName());
-		Thread gsThread = new Thread(groupServer);
+		gsThread = new Thread(groupServer);
 		
 		gsThread.setDaemon(true);
 		
@@ -170,4 +171,19 @@ public class TwitchBot extends PircBotX {
 		super.startBot();
 	}
 	
+	public void quit()
+	{
+		try
+		{
+			scheduler.clear();
+			scheduler.shutdown();
+		} catch (SchedulerException e)
+		{
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		gsThread.interrupt();
+		getGroupServer().quit();
+		send().quitServer();
+	}
 }
